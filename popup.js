@@ -55,7 +55,7 @@ function showEmptyState() {
   infoContainer.innerHTML =
     `<p>Nothing to show here.</p>
     <p>Either you are not fetching data from crunchbase tables or some error occurred.</p>
-    <p>Please try accordingly.</p>`;
+    <p>Please try accordingly. You can also try to refresh the crunchbase table page to get the results.</p>`;
   return;
 }
 
