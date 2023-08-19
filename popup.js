@@ -1,127 +1,14 @@
-// chrome.runtime.sendMessage({ action: "getData" }, (response) => {
-//   const table = document.getElementById("table");
-
-//   // Create table headers
-//   const thead = table.createTHead();
-//   const headerRow = thead.insertRow();
-//   response.headers.forEach((headerText) => {
-//     const th = document.createElement("th");
-//     th.textContent = headerText;
-//     headerRow.appendChild(th);
-//   });
-
-//   // Create table rows
-//   const tbody = table.createTBody();
-//   response.rows.forEach((rowData) => {
-//     const row = tbody.insertRow();
-//     rowData.forEach((cellText) => {
-//       const cell = row.insertCell();
-//       cell.textContent = cellText;
-//     });
-//   });
-// });
-
-// Retrieve the stored data from background script
-// chrome.storage.local.get("tableData", (result) => {
-//   console.log(result);
-//   const res = JSON.parse(result);
-//   const data = result.getContentData;
-//   // Display the data in your popup's HTML
-//   const table = document.getElementById("table");
-
-//   // Create table headers
-//   const thead = table.createTHead();
-//   const headerRow = thead.insertRow();
-//   res.headers.forEach((headerText) => {
-//     const th = document.createElement("th");
-//     th.textContent = headerText;
-//     headerRow.appendChild(th);
-//   });
-
-//   // Create table rows
-//   const tbody = table.createTBody();
-//   res.rows.forEach((rowData) => {
-//     const row = tbody.insertRow();
-//     rowData.forEach((cellText) => {
-//       const cell = row.insertCell();
-//       cell.textContent = cellText;
-//     });
-//   });
-// });
-// chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
-//   console.log("outside");
-//   if (message.data === "clicked") {
-//     console.log("inside");
-//     // The extension's icon was clicked.
-//     chrome.runtime.sendMessage(
-//       null,
-//       {
-//         action: "getGlobalVariable",
-//         variableName: "perfWatch",
-//       },
-//       function (response) {
-//         console.log("doubelinside");
-//         // Do something with the response.
-//         console.log(response);
-//         const table = document.getElementById("table");
-
-//         // Create table headers
-//         const thead = table.createTHead();
-//         const headerRow = thead.insertRow();
-//         response.headers.forEach((headerText) => {
-//           const th = document.createElement("th");
-//           th.textContent = headerText;
-//           headerRow.appendChild(th);
-//         });
-
-//         // Create table rows
-//         const tbody = table.createTBody();
-//         response.rows.forEach((rowData) => {
-//           const row = tbody.insertRow();
-//           rowData.forEach((cellText) => {
-//             const cell = row.insertCell();
-//             cell.textContent = cellText;
-//           });
-//         });
-//       }
-//     );
-//   }
-// });
-
-// chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
-//   if (message.method === "tableData") {
-//     createTable(message);
-//   }
-// });
-
-// chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
-//   console.log("popup event listener ran");
-//   if (message.data === "clicked") {
-//     console.log("clicked");
-//     // Call the background script.
-//     chrome.runtime.sendMessage(
-//       null,
-//       {
-//         action: "callBackgroundScript",
-//       },
-//       function (response) {
-//         // The background script has responded.
-//         // Do something with the response.
-//         console.log("Got response from content.js");
-//         createTable(response);
-//       }
-//     );
-//   }
-// });
-
 document.addEventListener("DOMContentLoaded", function () {
-  // Your code to execute when the popup is loaded
-    console.log('popup.js: it is loaded')
+  runContentMutationLogic();
+  
+    // Your code to execute when the popup is loaded
+  console.log("popup.js: it is loaded");
   // Detect the extension icon click
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     // tabs[0] will contain information about the currently active tab
     var activeTab = tabs[0];
     console.log("popup.js: extension is clicked");
+    showLoadingState();
     // Call the background script.
     chrome.runtime.sendMessage(
       null,
@@ -133,68 +20,107 @@ document.addEventListener("DOMContentLoaded", function () {
         // The background script has responded.
         // Do something with the response.
         console.log("popup.js: Got response from content.js");
-        createTable(response);
+        if (!response) {
+          showEmptyState();
+        } else {
+          if (
+            response.data &&
+            response.data.hasOwnProperty("headers") &&
+            typeof response.data.headers === "object" &&
+            response.data.headers.length > 0
+          ) {
+            createTable(response);
+          } else {
+            showEmptyState();
+          }
+        }
       }
     );
   });
 });
 
-function createTable(response) {
-  console.log(response.data);
+function showLoadingState() {
   const table = document.getElementById("table");
+  const infoContainer = document.getElementById("info-container");
   table.innerHTML = "";
-
-  // Create table headers
-  const thead = table.createTHead();
-  const headerRow = thead.insertRow();
-  response.data.headers.forEach((headerText) => {
-    const th = document.createElement("th");
-    th.textContent = headerText;
-    headerRow.appendChild(th);
-  });
-
-  // Create table rows
-  const tbody = table.createTBody();
-  response.data.rows.forEach((rowData) => {
-    const row = tbody.insertRow();
-    rowData.forEach((cellText) => {
-      const cell = row.insertCell();
-      cell.innerHTML = cellText;
-    });
-  });
+  infoContainer.innerHTML = "<p>Loading data...</p>";
+  return;
 }
 
-// window.addEventListener("DOMContentLoaded", () => {
-//   let bg = chrome.extension.getBackgroundPage();
+function showEmptyState() {
+  const table = document.getElementById("table");
+  const infoContainer = document.getElementById("info-container");
+  table.innerHTML = "";
+  infoContainer.innerHTML = "";
+  infoContainer.innerHTML =
+    `<p>Nothing to show here.</p>
+    <p>Either you are not fetching data from crunchbase tables or some error occurred.</p>
+    <p>Please try accordingly.</p>`;
+  return;
+}
 
-//   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-//     let currentTabId = tabs[0].id;
-//     console.log("bg", bg);
-//     if (!bg) {
-//       return;
-//     }
-//     let currentPerf = bg.perfWatch[currentTabId];
+function createTable(response) {
+  function buildTable(tableData) {
+    // Create table headers
+    const thead = table.createTHead();
+    const headerRow = thead.insertRow();
+    tableData.headers.forEach((headerText) => {
+      const th = document.createElement("th");
+      th.textContent = headerText;
+      headerRow.appendChild(th);
+    });
 
-//     // Display the data in your popup's HTML
-//     const table = document.getElementById("table");
+    // Create table rows
+    const tbody = table.createTBody();
+    tableData.rows.forEach((rowData) => {
+      const row = tbody.insertRow();
+      rowData.forEach((cellText) => {
+        const cell = row.insertCell();
+        cell.innerHTML = cellText;
+      });
+    });
+  }
 
-//     // Create table headers
-//     const thead = table.createTHead();
-//     const headerRow = thead.insertRow();
-//     currentPerf.headers.forEach((headerText) => {
-//       const th = document.createElement("th");
-//       th.textContent = headerText;
-//       headerRow.appendChild(th);
-//     });
+  console.log(response.data);
+  if (!response) {
+    showEmptyState();
+    return;
+  }
+  const table = document.getElementById("table");
+  const infoContainer = document.getElementById("info-container");
+  table.innerHTML = "";
+  infoContainer.innerHTML = "";
 
-//     // Create table rows
-//     const tbody = table.createTBody();
-//     currentPerf.rows.forEach((rowData) => {
-//       const row = tbody.insertRow();
-//       rowData.forEach((cellText) => {
-//         const cell = row.insertCell();
-//         cell.textContent = cellText;
-//       });
-//     });
-//   });
-// });
+  tdata = response.data;
+  buildTable(tdata);
+}
+
+function runContentMutationLogic() {
+    const table = document.getElementById("table");
+    
+    // Set up a MutationObserver to watch for changes in the contentDiv
+    const tableObserver = new MutationObserver(function(mutations) {
+        // Handle mutations here if needed
+        // For now, simply log a message to indicate a change
+        console.log('tableObserver Content has changed:');
+    });
+    
+    // Configure and start the observer
+    const tableObserverConfig = { childList: true, characterData: true, subtree: true };
+    tableObserver.observe(table, tableObserverConfig);
+
+
+    const infoContainer = document.getElementById("info-container");
+    // Set up a MutationObserver to watch for changes in the contentDiv
+    const infoContainerObserver = new MutationObserver(function(mutations) {
+        // Handle mutations here if needed
+        // For now, simply log a message to indicate a change
+        console.log('info container Content has changed:');
+    });
+    
+    // Configure and start the observer
+    const infoContainerObserverConfig = { childList: true, characterData: true, subtree: true };
+    infoContainerObserver.observe(infoContainer, infoContainerObserverConfig);
+
+    return
+}

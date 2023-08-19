@@ -34,10 +34,15 @@ function extractTableData() {
     ".grid-container .header-contents"
   );
 
+  let lastAddColumnPresent = false;
   // Extract header names
   headerCells.forEach((cell) => {
     const headerName = cell.textContent.trim();
-    headers.push(headerName);
+    if (headerName.toLowerCase() == 'add column') {
+        lastAddColumnPresent = true;
+    } else {
+        headers.push(headerName);
+    }
   });
 
   // Select the rows
@@ -45,7 +50,7 @@ function extractTableData() {
 
   // Extract row data
   rowsElements.forEach((rowElement) => {
-    const row = [];
+    let row = [];
     const rowCells = rowElement.querySelectorAll(".non-select-column");
 
     rowCells.forEach((cell) => {
@@ -63,6 +68,10 @@ function extractTableData() {
       }
       row.push(cellData);
     });
+
+    if (lastAddColumnPresent) {
+        row = row.slice(0, row.length - 1)
+    }
 
     rows.push(row);
   });
