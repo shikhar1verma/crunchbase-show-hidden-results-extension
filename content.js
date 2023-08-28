@@ -1,4 +1,33 @@
 // content.js
+
+// remove blurred css from table
+
+function removeBlockingContent() {
+    setTimeout(() => {
+        // this wil remove the above wrapper from table
+        let wrapperDiv = document.querySelector(".all-results-upsell-wrapper")
+        if (wrapperDiv) wrapperDiv.remove();
+        // this will remove the blurred csss
+        let blurredRows = document.querySelectorAll("grid-row.blurred-row");
+        if (blurredRows.length > 0) {
+            blurredRows.forEach((e) => {
+              e.classList.remove("blurred-row");
+            });
+        } 
+    }, 2000); // after 2 seconds
+
+}
+
+removeBlockingContent();
+
+// this code will listen a click and try to remove the tables if present
+let tablesTab = document.querySelector('.mat-mdc-tab-link-container');
+tablesTab.addEventListener("click", () => {
+    removeBlockingContent();
+});
+
+
+
 const tableData = {
   action: "getContentData",
   data: {
@@ -6,13 +35,6 @@ const tableData = {
     rows: [],
   },
 };
-
-// alert('heelo');
-
-// tableData.data = extractTableData();
-// chrome.runtime.sendMessage(tableData);
-// chrome.extension.sendRequest(tableData);
-// localStorage.setItem("tableData", JSON.stringify(tableData.data));
 
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   console.log("content.js: content script is called");
@@ -38,10 +60,10 @@ function extractTableData() {
   // Extract header names
   headerCells.forEach((cell) => {
     const headerName = cell.textContent.trim();
-    if (headerName.toLowerCase() == 'add column') {
-        lastAddColumnPresent = true;
+    if (headerName.toLowerCase() == "add column") {
+      lastAddColumnPresent = true;
     } else {
-        headers.push(headerName);
+      headers.push(headerName);
     }
   });
 
@@ -70,7 +92,7 @@ function extractTableData() {
     });
 
     if (lastAddColumnPresent) {
-        row = row.slice(0, row.length - 1)
+      row = row.slice(0, row.length - 1);
     }
 
     rows.push(row);
